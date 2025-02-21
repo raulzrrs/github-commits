@@ -33,9 +33,11 @@ O **GitHub Commit Fetcher** é um script Node.js que coleta commits de um usuár
    TARGET_USER=usuario_alvo
    ```
 
+4. Certifique-se de que a pasta `output/` está no `.gitignore` para evitar que os arquivos gerados sejam commitados.
+
 ## Uso
 
-Para rodar o script, utilize o seguinte comando:
+Execute o script com os seguintes argumentos opcionais:
 
 ```bash
 npm start -- --month <mês> --year <ano>
@@ -54,7 +56,7 @@ npm start -- --month <mês> --year <ano>
 
 ## Estrutura do Arquivo de Saída
 
-Os commits serão salvos em um arquivo JSON no seguinte formato:
+Os commits serão salvos dentro da pasta `output/`, no seguinte formato:
 
 ```json
 {
