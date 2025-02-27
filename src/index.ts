@@ -212,6 +212,21 @@ class GitHubCommitFetcher {
       );
       await Promise.allSettled(promises);
 
+      const orderedCommitsByDay: typeof this.commitsByDay = {};
+
+      const dateKeys = Object.keys(this.commitsByDay);
+      const sortedDateKeys = dateKeys.sort((a, b) => {
+        const [dayA, monthA, yearA] = a.split("/").map(Number);
+        const [dayB, monthB, yearB] = b.split("/").map(Number);
+        const dateA = new Date(yearA, monthA - 1, dayA);
+        const dateB = new Date(yearB, monthB - 1, dayB);
+        return dateA.getTime() - dateB.getTime();
+      });
+
+      sortedDateKeys.forEach((dateKey) => {
+        orderedCommitsByDay[dateKey] = this.commitsByDay[dateKey];
+      });
+
       const outputDir = path.join(__dirname, "../output");
       if (!fs.existsSync(outputDir)) {
         fs.mkdirSync(outputDir, { recursive: true });
@@ -223,7 +238,7 @@ class GitHubCommitFetcher {
       );
       await fs.promises.writeFile(
         outputFile,
-        JSON.stringify(this.commitsByDay, null, 2)
+        JSON.stringify(orderedCommitsByDay, null, 2)
       );
       console.log(`Commits salvos em ${outputFile}`);
     } catch (error) {
