@@ -60,32 +60,35 @@ Os commits serão salvos dentro da pasta `output/`, no seguinte formato:
 
 ```json
 {
-  "01/02/2024": [
-    {
-      "repo": "organizacao/repo1",
-      "message": "Correção de bug no sistema",
-      "author": "Nome do Autor",
-      "date": "2024-02-01T12:34:56Z"
+  "01/02/2024": {
+    "nome-do-projeto": {
+      "commits": [
+        {
+          "message": "Correção de bug no sistema",
+          "author": "Nome do Autor",
+          "date": "2024-02-01T12:34:56Z"
+        },
+        {
+          "message": "fix: all",
+          "author": "Nome do Autor",
+          "date": "2024-02-01T12:36:56Z"
+        }
+      ],
+      "all-commits": "Correção de bug no sistema, fix: all"
     }
-  ],
-  "02/02/2024": [
-    {
-      "repo": "organizacao/repo2",
-      "message": "Adicionando nova funcionalidade",
-      "author": "Outro Autor",
-      "date": "2024-02-02T15:20:10Z"
-    }
-  ]
+  }
 }
 ```
 
 ## Erros Comuns e Soluções
 
 - **Erro: `Erro na requisição: 404 Not Found`**
+
   - Verifique se o nome da organização (`ORG_NAME`) está correto.
   - Certifique-se de que o token do GitHub tem permissões para acessar os repositórios.
 
 - **Erro: `Erro: O token do GitHub não está definido`**
+
   - Certifique-se de que o arquivo `.env` está configurado corretamente e carregado no ambiente.
 
 - **Erro: `Erro ao obter repositórios: API rate limit exceeded`**
@@ -104,4 +107,3 @@ Contribuições são bem-vindas! Para contribuir:
 ## Licença
 
 Este projeto está licenciado sob a [MIT License](LICENSE).
-
