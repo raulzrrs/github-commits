@@ -38,15 +38,32 @@ interface Options {
   year?: number;
 }
 
+// Nova interface para representar um commit processado
+interface ProcessedCommit {
+  message: string;
+  author: string;
+  date: string;
+}
+
+// Nova interface para representar commits agrupados por projeto
+interface ProjectCommits {
+  commits: ProcessedCommit[];
+  "all-commits": string;
+}
+
+// Interface atualizada para a estrutura de dados principal
+interface CommitsByDay {
+  [date: string]: {
+    [repo: string]: ProjectCommits;
+  };
+}
+
 class GitHubCommitFetcher {
   private token: string;
   private orgName: string;
   private targetUser: string;
   private HEADERS: Record<string, string>;
-  private commitsByDay: Record<
-    string,
-    Array<{ repo: string; message: string; author: string; date: string }>
-  > = {};
+  private commitsByDay: CommitsByDay = {};
 
   constructor(token: string, orgName: string, targetUser: string) {
     this.token = token;
@@ -164,11 +181,20 @@ class GitHubCommitFetcher {
         const commitDate = new Date(commitDateStr);
         if (commitDate >= since && commitDate <= until) {
           const dayKey = this.formatDatePtBR(commitDateStr);
+
+          // Inicializar a estrutura de dados se necessário
           if (!this.commitsByDay[dayKey]) {
-            this.commitsByDay[dayKey] = [];
+            this.commitsByDay[dayKey] = {};
           }
-          this.commitsByDay[dayKey].push({
-            repo: repoFullName,
+          if (!this.commitsByDay[dayKey][repoFullName]) {
+            this.commitsByDay[dayKey][repoFullName] = {
+              commits: [],
+              "all-commits": "",
+            };
+          }
+
+          // Adicionar commit ao array
+          this.commitsByDay[dayKey][repoFullName].commits.push({
             message: commit.commit.message,
             author: commit.commit.author.name,
             date: commitDateStr,
@@ -182,6 +208,17 @@ class GitHubCommitFetcher {
         }`
       );
     }
+  }
+
+  // Método para gerar o campo all-commits para cada projeto
+  private generateAllCommitsField(): void {
+    Object.keys(this.commitsByDay).forEach((day) => {
+      Object.keys(this.commitsByDay[day]).forEach((repo) => {
+        const commits = this.commitsByDay[day][repo].commits;
+        const allCommits = commits.map((c) => c.message.trim()).join(", ");
+        this.commitsByDay[day][repo]["all-commits"] = allCommits;
+      });
+    });
   }
 
   private formatDatePtBR(dateString: string): string {
@@ -212,7 +249,11 @@ class GitHubCommitFetcher {
       );
       await Promise.allSettled(promises);
 
-      const orderedCommitsByDay: typeof this.commitsByDay = {};
+      // Gerar o campo all-commits para cada projeto
+      this.generateAllCommitsField();
+
+      // Ordenar as datas
+      const orderedCommitsByDay: CommitsByDay = {};
 
       const dateKeys = Object.keys(this.commitsByDay);
       const sortedDateKeys = dateKeys.sort((a, b) => {
