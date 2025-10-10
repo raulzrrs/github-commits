@@ -288,6 +288,7 @@ class GitHubCommitFetcher {
           // Estrutura aninhada: dia -> repo -> lista de commits
           if (!this.commitsByDay[dayKey]) {
             this.commitsByDay[dayKey] = {};
+            this.commitsByDay[dayKey] = {};
           }
           if (!this.commitsByDay[dayKey][repoFull]) {
             this.commitsByDay[dayKey][repoFull] = [];
