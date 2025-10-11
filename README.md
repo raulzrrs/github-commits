@@ -57,11 +57,17 @@ O **GitHub Commit Fetcher** é um script Node.js que coleta commits de um usuár
 
    **Variáveis opcionais:**
 
-   - `TARGET_USER`: Usuário específico para filtrar commits (gera arquivo adicional)
+   - `TARGET_USER`: Usuário específico para filtrar commits (obrigatório quando não usar `--all-users`)
    - `MONTH`: Mês padrão (1-12)
    - `YEAR`: Ano padrão
+   - `LAST_DAYS`: Número de dias para análise retrospectiva
    - `TODAY_ONLY`: `true` para processar apenas commits de hoje
    - `ALL_BRANCHES`: `true` para incluir todas as branches (padrão: apenas branch principal)
+   - `ALL_USERS`: `true` para incluir commits de todos os usuários
+   - `MAIN_ONLY`: `true` para forçar apenas branch principal
+   - `QUIET`: `true` para reduzir logs de saída
+   - `NO_RAW`: `true` para não salvar arquivo raw de commits
+   - `OUT_DIR`: Diretório base para arquivos de saída
 
 ## Uso
 
@@ -75,22 +81,36 @@ npm start
 
 O script suporta as seguintes opções via argumentos de linha de comando:
 
-#### Período de Tempo
+#### Período de Tempo (Precedência: today > last-days > month/year)
 
+- `--today`: Coleta apenas commits do dia atual
+- `--last-days=<número>`: Analisa os últimos N dias (ex.: `--last-days=10`)
 - `--month=<número>`: Especifica o mês (1-12)
 - `--year=<número>`: Especifica o ano
-- `--today`: Coleta apenas commits do dia atual
 
 #### Configuração de Branches
 
-- `--all-branches`: Inclui commits de todas as branches (padrão: apenas branch principal)
+- `--all-branches`: Inclui commits de todas as branches
+- `--main-only`: Processa apenas a branch padrão (default)
+
+#### Configuração de Usuários
+
+- `--all-users`: Inclui commits de todos os usuários
+- Por padrão: apenas commits do usuário definido em `TARGET_USER`
+
+#### Outras Opções
+
+- `--quiet`: Reduz a quantidade de logs de saída
+- `--no-raw`: Não salva o arquivo `raw_commits_*.json`
+- `--out-dir=<caminho>`: Define diretório base para arquivos de saída
+- `--help` ou `-h`: Exibe ajuda completa
 
 ### Exemplos de Uso
 
 #### Exemplos básicos:
 
 ```bash
-# Commits do mês atual
+# Commits do mês atual (apenas do usuário TARGET_USER)
 npm start
 
 # Commits de janeiro de 2024
@@ -104,6 +124,12 @@ npm start -- --today
 
 # Commits de hoje, todas as branches
 npm start -- --today --all-branches
+
+# Últimos 7 dias, todos os usuários
+npm start -- --last-days=7 --all-users
+
+# Últimos 30 dias, todas as branches, todos os usuários
+npm start -- --last-days=30 --all-branches --all-users
 ```
 
 #### Usando variáveis de ambiente:
@@ -114,11 +140,30 @@ MONTH=10 YEAR=2024 ALL_BRANCHES=true npm start
 
 # Apenas hoje via variável
 TODAY_ONLY=true npm start
+
+# Todos os usuários via variável
+ALL_USERS=true npm start
+
+# Últimos 15 dias via variável
+LAST_DAYS=15 npm start
+```
+
+#### Exemplos avançados:
+
+```bash
+# Salvar em diretório personalizado
+npm start -- --today --out-dir=./data
+
+# Modo silencioso sem arquivo raw
+npm start -- --month=10 --year=2024 --quiet --no-raw
+
+# Ajuda completa
+npm start -- --help
 ```
 
 ## Estrutura dos Arquivos de Saída
 
-O script gera automaticamente os seguintes arquivos na pasta `output/`:
+O script gera automaticamente os seguintes arquivos na pasta `output/YYYY/MM/`:
 
 ### 1. Commits por Dia (`commits_by_day_YYYY_MM.json`)
 
@@ -171,7 +216,7 @@ Dados completos dos commits retornados pela API do GitHub, incluindo:
 
 ### 4. Commits por Usuário (`commits_USUARIO_YYYY_MM.json`)
 
-**Gerado apenas quando `TARGET_USER` está definido**
+**Gerado apenas quando `TARGET_USER` está definido e não está usando `--all-users`**
 
 Filtra e organiza commits de um usuário específico:
 
@@ -190,18 +235,30 @@ Filtra e organiza commits de um usuário específico:
 }
 ```
 
+**Nota:** O arquivo por usuário específico só é gerado quando não está no modo `--all-users`.
+
 ## Funcionalidades
 
 ### 🚀 Principais Recursos
 
 - **Coleta de commits**: Busca commits de organizações ou usuários do GitHub
-- **Filtro por período**: Suporte a mês/ano específico ou apenas dia atual
+- **Filtro por período flexível**: Suporte a:
+  - Dia específico (`--today`)
+  - Últimos N dias (`--last-days=N`)
+  - Mês/ano específico (`--month=MM --year=YYYY`)
 - **Suporte a múltiplas branches**: Opção de incluir todas as branches ou apenas a principal
-- **Filtro por usuário**: Geração de relatório específico para um usuário
+- **Filtro por usuário**: Modo específico para um usuário ou todos os usuários
+- **Otimização de performance**:
+  - Cache de branches para evitar requisições duplicadas
+  - Filtro por repositórios ativos (baseado em `pushed_at`)
+  - Controle de concorrência para branches
 - **Prevenção de duplicados**: Usa SHA do commit para evitar commits duplicados
 - **Rate limit**: Monitora e exibe informações do rate limit da API
 - **Suporte a orgs e users**: Funciona com organizações e usuários individuais
 - **Ordenação cronológica**: Commits organizados por data
+- **Configuração flexível**: Suporte a variáveis de ambiente e flags de linha de comando
+- **Organização de arquivos**: Estrutura hierárquica por ano/mês
+- **Detecção de erros**: Validação de autenticação e tratamento de erros da API
 
 ### 📊 Estatísticas Geradas
 
@@ -215,7 +272,11 @@ Filtra e organiza commits de um usuário específico:
 ### Problemas de Configuração
 
 - **Erro: `Erro: defina GITHUB_TOKEN e ORG_NAME (ou ACCOUNT) no .env ou variáveis de ambiente`**
+
   - Certifique-se de que o arquivo `.env` está configurado corretamente com as variáveis obrigatórias.
+
+- **Erro: `Erro de configuração: por padrão só listamos um usuário, mas TARGET_USER não foi definido`**
+  - Defina `TARGET_USER` no `.env` ou use a flag `--all-users` para incluir todos os usuários.
 
 ### Problemas de API
 
@@ -223,6 +284,11 @@ Filtra e organiza commits de um usuário específico:
 
   - Verifique se o nome da organização (`ORG_NAME`) está correto.
   - Certifique-se de que o token do GitHub tem permissões para acessar os repositórios.
+
+- **Erro: `Falha de autenticação na API do GitHub`**
+
+  - Verifique se o `GITHUB_TOKEN` está correto e não expirou.
+  - Confirme se o token tem as permissões necessárias para acessar a organização/conta.
 
 - **Erro: `API rate limit exceeded`**
   - O GitHub tem limites de requisições (5000/hora para tokens autenticados).
@@ -242,10 +308,22 @@ Filtra e organiza commits de um usuário específico:
   - Indica repositório vazio ou branch sem commits.
   - Não é um erro crítico, o script continua processando outros repositórios.
 
+- **Warning: `Nenhum repositório encontrado para a conta`**
+
+  - Verifique se a conta/organização existe.
+  - Confirme se o token tem permissão para acessar os repositórios.
+  - Verifique se o nome da conta está correto (case-sensitive).
+
+- **Warning: `Nenhum repositório com atividade recente no período especificado`**
+
+  - Indica que não há repositórios com commits no período selecionado.
+  - Tente expandir o período ou usar `--all-branches`.
+
 - **Nenhum commit encontrado no período**
   - Verifique se o período especificado está correto.
   - Confirme se há commits no período para a organização/usuário especificado.
   - Use `--all-branches` se os commits estão em outras branches.
+  - Use `--all-users` se estiver filtrando apenas um usuário específico.
 
 ## Scripts Disponíveis
 
@@ -257,8 +335,8 @@ Filtra e organiza commits de um usuário específico:
 ### Análise Completa de uma Organização
 
 ```bash
-# Todos os commits de 2024, todas as branches
-npm start -- --year=2024 --all-branches
+# Todos os commits de 2024, todas as branches, todos os usuários
+npm start -- --year=2024 --all-branches --all-users
 ```
 
 ### Monitoramento Diário
@@ -266,6 +344,19 @@ npm start -- --year=2024 --all-branches
 ```bash
 # Commits de hoje com usuário específico
 TARGET_USER=raulzrrs npm start -- --today --all-branches
+
+# Commits de hoje, todos os usuários
+npm start -- --today --all-users --all-branches
+```
+
+### Relatórios Retrospectivos
+
+```bash
+# Últimos 15 dias, todos os usuários
+npm start -- --last-days=15 --all-users --all-branches
+
+# Últimos 7 dias, apenas usuário específico
+npm start -- --last-days=7
 ```
 
 ### Relatórios Mensais
@@ -273,6 +364,19 @@ TARGET_USER=raulzrrs npm start -- --today --all-branches
 ```bash
 # Outubro 2024 com filtro de usuário
 npm start -- --month=10 --year=2024
+
+# Outubro 2024, todos os usuários
+npm start -- --month=10 --year=2024 --all-users
+```
+
+### Configurações Específicas
+
+```bash
+# Salvar em diretório personalizado, modo silencioso
+npm start -- --today --out-dir=./reports --quiet
+
+# Sem arquivo raw, apenas estatísticas
+npm start -- --month=10 --year=2024 --no-raw
 ```
 
 ## Contribuição
