@@ -1,6 +1,22 @@
 {
+  "name": "github-commit-reporter",
+  "version": "1.0.0",
+  "description": "Generate GitHub commit reports and AI-written summaries.",
+  "license": "MIT",
+  "keywords": [
+    "github",
+    "commits",
+    "openai",
+    "reports",
+    "typescript"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
-    "start": "npx ts-node src/index.ts"
+    "start": "npx ts-node src/index.ts",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "dotenv": "^16.4.7",
