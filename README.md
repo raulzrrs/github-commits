@@ -49,7 +49,7 @@ O **GitHub Commit Fetcher** é um script Node.js que coleta commits de um usuár
    ORG_NAME=nome_da_organizacao
    TARGET_USER=usuario_alvo
    OPENAI_API_KEY=sua_chave_openai_aqui
-   OPENAI_MODEL=gpt-5
+   OPENAI_MODEL=gpt-5-nano
    OPENAI_INSTRUCTION=Analise os commits retornados do GitHub e gere um resumo executivo com principais entregas, riscos e destaques por repositorio.
    ```
 
@@ -73,7 +73,7 @@ O **GitHub Commit Fetcher** é um script Node.js que coleta commits de um usuár
    - `QUIET`: `true` para reduzir logs de saída
    - `NO_RAW`: `true` para não salvar arquivo raw de commits
    - `OUT_DIR`: Diretório base para arquivos de saída
-   - `OPENAI_MODEL`: Modelo usado na análise da OpenAI (padrão: `gpt-5`)
+   - `OPENAI_MODEL`: Modelo usado na análise da OpenAI (padrão: `gpt-5-nano`)
    - `OPENAI_OUTPUT_FILE`: Caminho customizado para salvar a resposta da OpenAI
 
 ## Uso

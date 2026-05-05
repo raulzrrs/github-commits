@@ -101,7 +101,7 @@ export function parseCliConfig(): CliConfig {
   const ACCOUNT = process.env.ORG_NAME || process.env.ACCOUNT || "";
   const TARGET_USER = process.env.TARGET_USER || "";
   const OPENAI_API_KEY = process.env.OPENAI_API_KEY || "";
-  const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-5";
+  const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-5-nano";
   const OPENAI_INSTRUCTION = process.env.OPENAI_INSTRUCTION || "";
   const OPENAI_OUTPUT_FILE = process.env.OPENAI_OUTPUT_FILE || "";
 
