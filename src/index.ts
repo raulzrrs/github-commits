@@ -16,7 +16,9 @@ validateEnvironment(
   config.githubToken,
   config.account,
   config.targetUser || "",
-  config.allUsers
+  config.allUsers,
+  config.openaiApiKey,
+  config.openaiInstruction
 );
 
 // Cria instância do fetcher
@@ -26,6 +28,10 @@ const fetcher = new GitHubCommitFetcher({
   targetUser: config.targetUser,
   quiet: config.quiet,
   saveRaw: config.saveRaw,
+  openaiApiKey: config.openaiApiKey,
+  openaiModel: config.openaiModel,
+  openaiInstruction: config.openaiInstruction,
+  openaiOutputFile: config.openaiOutputFile,
 });
 
 // Executa a coleta

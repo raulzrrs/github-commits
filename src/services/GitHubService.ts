@@ -9,6 +9,7 @@ import {
   CommitsByUser,
   FetcherOptions,
 } from "../types";
+import { OpenAIService } from "./OpenAIService";
 import {
   startOfDay,
   endOfDay,
@@ -24,6 +25,8 @@ export class GitHubCommitFetcher {
   private targetUser?: string;
   private quiet: boolean;
   private saveRaw: boolean;
+  private openaiService: OpenAIService;
+  private openaiOutputFile?: string;
   private HEADERS: Record<string, string>;
   private commitsByDay: CommitsByDay = {};
   private commitsByUser: CommitsByUser = {};
@@ -43,6 +46,12 @@ export class GitHubCommitFetcher {
     this.targetUser = options.targetUser;
     this.quiet = options.quiet ?? false;
     this.saveRaw = options.saveRaw ?? true;
+    this.openaiService = new OpenAIService({
+      apiKey: options.openaiApiKey,
+      model: options.openaiModel,
+      instruction: options.openaiInstruction,
+    });
+    this.openaiOutputFile = options.openaiOutputFile;
     this.HEADERS = {
       Authorization: `token ${this.token}`,
       "User-Agent": "github-commit-fetcher",
@@ -400,6 +409,9 @@ export class GitHubCommitFetcher {
       outDir,
       `ranking_${yearStr}_${monthStr}.json`
     );
+    const openaiFile =
+      this.openaiOutputFile ||
+      path.join(outDir, `openai_response_${yearStr}_${monthStr}.md`);
 
     const orderedCommitsByDay = Object.fromEntries(
       Object.entries(this.commitsByDay).sort(([dayA], [dayB]) => {
@@ -473,10 +485,31 @@ export class GitHubCommitFetcher {
 
     await Promise.all(writePromises);
 
+    console.log(`\nChamando OpenAI para analisar os commits...`);
+    const openaiResponse = await this.openaiService.analyzeCommits({
+      account: this.account,
+      period: {
+        from: formatDatePtBR(firstDay),
+        to: formatDatePtBR(lastDay),
+      },
+      branchesMode,
+      usersScope: scopeLabel,
+      stats: {
+        repositoriesFound: repos.length,
+        activeRepositories: activeRepos.length,
+        uniqueCommits: this.processedCommitShas.size,
+      },
+      ranking,
+      commitsByDay: orderedCommitsByDay,
+    });
+    ensureDir(path.dirname(openaiFile));
+    await fs.promises.writeFile(openaiFile, openaiResponse);
+
     console.log(`\n✅ Arquivos gerados com sucesso:`);
     if (this.saveRaw) console.log(` - raw: ${rawFile}`);
     console.log(` - por dia: ${byDayFile}`);
     console.log(` - ranking: ${rankingFile}`);
+    console.log(` - resposta OpenAI: ${openaiFile}`);
     if (targetUserFile) {
       console.log(
         ` - commits do usuário ${this.targetUser}: ${targetUserFile}`

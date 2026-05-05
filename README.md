@@ -48,12 +48,17 @@ O **GitHub Commit Fetcher** é um script Node.js que coleta commits de um usuár
    GITHUB_TOKEN=seu_token_aqui
    ORG_NAME=nome_da_organizacao
    TARGET_USER=usuario_alvo
+   OPENAI_API_KEY=sua_chave_openai_aqui
+   OPENAI_MODEL=gpt-5
+   OPENAI_INSTRUCTION=Analise os commits retornados do GitHub e gere um resumo executivo com principais entregas, riscos e destaques por repositorio.
    ```
 
    **Variáveis obrigatórias:**
 
    - `GITHUB_TOKEN`: Token de acesso do GitHub com permissões adequadas
    - `ORG_NAME` (ou `ACCOUNT`): Nome da organização ou usuário no GitHub
+   - `OPENAI_API_KEY`: Chave da API da OpenAI
+   - `OPENAI_INSTRUCTION`: Instrução enviada para a OpenAI junto com os commits
 
    **Variáveis opcionais:**
 
@@ -68,6 +73,8 @@ O **GitHub Commit Fetcher** é um script Node.js que coleta commits de um usuár
    - `QUIET`: `true` para reduzir logs de saída
    - `NO_RAW`: `true` para não salvar arquivo raw de commits
    - `OUT_DIR`: Diretório base para arquivos de saída
+   - `OPENAI_MODEL`: Modelo usado na análise da OpenAI (padrão: `gpt-5`)
+   - `OPENAI_OUTPUT_FILE`: Caminho customizado para salvar a resposta da OpenAI
 
 ## Uso
 
@@ -235,6 +242,10 @@ Filtra e organiza commits de um usuário específico:
 }
 ```
 
+### 5. Resposta da OpenAI (`openai_response_YYYY_MM.md`)
+
+Arquivo em Markdown com o retorno da OpenAI, gerado a partir dos commits por dia, ranking, período, escopo de usuários e estatísticas da coleta. O conteúdo é guiado pela variável `OPENAI_INSTRUCTION`.
+
 **Nota:** O arquivo por usuário específico só é gerado quando não está no modo `--all-users`.
 
 ## Funcionalidades
@@ -277,6 +288,9 @@ Filtra e organiza commits de um usuário específico:
 
 - **Erro: `Erro de configuração: por padrão só listamos um usuário, mas TARGET_USER não foi definido`**
   - Defina `TARGET_USER` no `.env` ou use a flag `--all-users` para incluir todos os usuários.
+
+- **Erro: `Erro: defina OPENAI_API_KEY e OPENAI_INSTRUCTION no .env ou variáveis de ambiente`**
+  - Defina a chave da OpenAI e a instrução que deve guiar a análise dos commits.
 
 ### Problemas de API
 

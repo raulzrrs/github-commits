@@ -34,6 +34,10 @@ Outros:
   --out-dir=PATH           Diretório base de saída (default: ./output)
   --help | -h              Mostra esta ajuda
 
+OpenAI:
+  Configurado via .env: OPENAI_API_KEY, OPENAI_MODEL, OPENAI_INSTRUCTION
+  OPENAI_OUTPUT_FILE pode sobrescrever o caminho do arquivo de resposta
+
 Exemplos:
   ts-node src/index.ts --today --all-branches
   ts-node src/index.ts --last-days=15 --main-only
@@ -60,7 +64,9 @@ export function validateEnvironment(
   githubToken: string,
   account: string,
   targetUser: string,
-  allUsers: boolean
+  allUsers: boolean,
+  openaiApiKey: string,
+  openaiInstruction: string
 ): void {
   if (!githubToken || !account) {
     console.error(
@@ -77,6 +83,13 @@ export function validateEnvironment(
     );
     process.exit(1);
   }
+
+  if (!openaiApiKey || !openaiInstruction) {
+    console.error(
+      "âŒ Erro: defina OPENAI_API_KEY e OPENAI_INSTRUCTION no .env ou variÃ¡veis de ambiente."
+    );
+    process.exit(1);
+  }
 }
 
 /**
@@ -87,6 +100,10 @@ export function parseCliConfig(): CliConfig {
   const GITHUB_TOKEN = process.env.GITHUB_TOKEN || "";
   const ACCOUNT = process.env.ORG_NAME || process.env.ACCOUNT || "";
   const TARGET_USER = process.env.TARGET_USER || "";
+  const OPENAI_API_KEY = process.env.OPENAI_API_KEY || "";
+  const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-5";
+  const OPENAI_INSTRUCTION = process.env.OPENAI_INSTRUCTION || "";
+  const OPENAI_OUTPUT_FILE = process.env.OPENAI_OUTPUT_FILE || "";
 
   // Flags de configuração
   const QUIET = hasCliFlag("quiet") || process.env.QUIET === "true";
@@ -120,6 +137,10 @@ export function parseCliConfig(): CliConfig {
     githubToken: GITHUB_TOKEN,
     account: ACCOUNT,
     targetUser: TARGET_USER || undefined,
+    openaiApiKey: OPENAI_API_KEY,
+    openaiModel: OPENAI_MODEL,
+    openaiInstruction: OPENAI_INSTRUCTION,
+    openaiOutputFile: OPENAI_OUTPUT_FILE || undefined,
     month: monthNum,
     year: yearNum,
     todayOnly,

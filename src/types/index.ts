@@ -34,6 +34,10 @@ export interface CliConfig {
   githubToken: string;
   account: string;
   targetUser?: string;
+  openaiApiKey: string;
+  openaiModel: string;
+  openaiInstruction: string;
+  openaiOutputFile?: string;
 }
 
 export interface FetcherOptions {
@@ -42,4 +46,25 @@ export interface FetcherOptions {
   targetUser?: string;
   quiet?: boolean;
   saveRaw?: boolean;
+  openaiApiKey: string;
+  openaiModel: string;
+  openaiInstruction: string;
+  openaiOutputFile?: string;
+}
+
+export interface OpenAICommitAnalysisInput {
+  account: string;
+  period: {
+    from: string;
+    to: string;
+  };
+  branchesMode: string;
+  usersScope: string;
+  stats: {
+    repositoriesFound: number;
+    activeRepositories: number;
+    uniqueCommits: number;
+  };
+  ranking: Array<[string, number]>;
+  commitsByDay: CommitsByDay;
 }
