@@ -16,9 +16,7 @@ validateEnvironment(
   config.githubToken,
   config.account,
   config.targetUser || "",
-  config.allUsers,
-  config.openaiApiKey,
-  config.openaiInstruction
+  config.allUsers
 );
 
 // Cria instância do fetcher

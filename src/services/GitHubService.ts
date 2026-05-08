@@ -25,7 +25,7 @@ export class GitHubCommitFetcher {
   private targetUser?: string;
   private quiet: boolean;
   private saveRaw: boolean;
-  private openaiService: OpenAIService;
+  private openaiService?: OpenAIService;
   private openaiOutputFile?: string;
   private HEADERS: Record<string, string>;
   private commitsByDay: CommitsByDay = {};
@@ -46,11 +46,13 @@ export class GitHubCommitFetcher {
     this.targetUser = options.targetUser;
     this.quiet = options.quiet ?? false;
     this.saveRaw = options.saveRaw ?? true;
-    this.openaiService = new OpenAIService({
-      apiKey: options.openaiApiKey,
-      model: options.openaiModel,
-      instruction: options.openaiInstruction,
-    });
+    if (options.openaiApiKey && options.openaiInstruction) {
+      this.openaiService = new OpenAIService({
+        apiKey: options.openaiApiKey,
+        model: options.openaiModel,
+        instruction: options.openaiInstruction,
+      });
+    }
     this.openaiOutputFile = options.openaiOutputFile;
     this.HEADERS = {
       Authorization: `token ${this.token}`,
@@ -485,31 +487,41 @@ export class GitHubCommitFetcher {
 
     await Promise.all(writePromises);
 
-    console.log(`\nChamando OpenAI para analisar os commits...`);
-    const openaiResponse = await this.openaiService.analyzeCommits({
-      account: this.account,
-      period: {
-        from: formatDatePtBR(firstDay),
-        to: formatDatePtBR(lastDay),
-      },
-      branchesMode,
-      usersScope: scopeLabel,
-      stats: {
-        repositoriesFound: repos.length,
-        activeRepositories: activeRepos.length,
-        uniqueCommits: this.processedCommitShas.size,
-      },
-      ranking,
-      commitsByDay: orderedCommitsByDay,
-    });
-    ensureDir(path.dirname(openaiFile));
-    await fs.promises.writeFile(openaiFile, openaiResponse);
+    let generatedOpenaiFile = "";
+    if (this.openaiService) {
+      console.log(`\nChamando OpenAI para analisar os commits...`);
+      const openaiResponse = await this.openaiService.analyzeCommits({
+        account: this.account,
+        period: {
+          from: formatDatePtBR(firstDay),
+          to: formatDatePtBR(lastDay),
+        },
+        branchesMode,
+        usersScope: scopeLabel,
+        stats: {
+          repositoriesFound: repos.length,
+          activeRepositories: activeRepos.length,
+          uniqueCommits: this.processedCommitShas.size,
+        },
+        ranking,
+        commitsByDay: orderedCommitsByDay,
+      });
+      ensureDir(path.dirname(openaiFile));
+      await fs.promises.writeFile(openaiFile, openaiResponse);
+      generatedOpenaiFile = openaiFile;
+    } else {
+      console.log(
+        "\nOpenAI desativado: defina OPENAI_API_KEY e OPENAI_INSTRUCTION para gerar o resumo com IA."
+      );
+    }
 
     console.log(`\n✅ Arquivos gerados com sucesso:`);
     if (this.saveRaw) console.log(` - raw: ${rawFile}`);
     console.log(` - por dia: ${byDayFile}`);
     console.log(` - ranking: ${rankingFile}`);
-    console.log(` - resposta OpenAI: ${openaiFile}`);
+    if (generatedOpenaiFile) {
+      console.log(` - resposta OpenAI: ${generatedOpenaiFile}`);
+    }
     if (targetUserFile) {
       console.log(
         ` - commits do usuário ${this.targetUser}: ${targetUserFile}`

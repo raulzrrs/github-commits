@@ -48,12 +48,12 @@ Required variables:
 
 - `GITHUB_TOKEN` - GitHub token with access to the target repositories
 - `ORG_NAME` or `ACCOUNT` - GitHub organization or user account
-- `OPENAI_API_KEY` - OpenAI API key
-- `OPENAI_INSTRUCTION` - Instruction used to generate the AI report
 
 Optional variables:
 
 - `TARGET_USER` - Required unless you run with `--all-users`
+- `OPENAI_API_KEY` - Enables the OpenAI report when used with `OPENAI_INSTRUCTION`
+- `OPENAI_INSTRUCTION` - Instruction used to generate the AI report
 - `OPENAI_MODEL` - Defaults to `gpt-5-nano`
 - `OPENAI_OUTPUT_FILE` - Custom path for the AI response file
 - `OUT_DIR` - Output directory, defaults to `./output`
@@ -67,7 +67,7 @@ Optional variables:
 npm start
 ```
 
-The default run collects commits for the current month using `TARGET_USER`, writes JSON files, calls OpenAI, and saves the AI response as Markdown.
+The default run collects commits for the current month using `TARGET_USER` and writes JSON files. When `OPENAI_API_KEY` and `OPENAI_INSTRUCTION` are configured, it also calls OpenAI and saves the AI response as Markdown.
 
 ## Examples
 
@@ -128,7 +128,7 @@ Files are saved under `output/YYYY/MM/` by default:
 - `ranking_YYYY_MM.json` - Commit count by author
 - `raw_commits_YYYY_MM.json` - Raw GitHub API commits, unless `--no-raw` is used
 - `commits_USER_YYYY_MM.json` - Target user commits, when `TARGET_USER` is used
-- `openai_response_YYYY_MM.md` - OpenAI-generated report
+- `openai_response_YYYY_MM.md` - OpenAI-generated report, when OpenAI is configured
 
 Example AI output for a daily report:
 
@@ -166,7 +166,7 @@ npm start -- --help
 
 - `GITHUB_TOKEN` errors usually mean the token is missing, expired, or lacks repository access.
 - `TARGET_USER` is required unless you pass `--all-users`.
-- `OPENAI_API_KEY` and `OPENAI_INSTRUCTION` are required before the OpenAI step can run.
+- `OPENAI_API_KEY` and `OPENAI_INSTRUCTION` are optional, but both are needed to enable the OpenAI step.
 - Empty reports usually mean no repositories were active in the selected period, or commits are on non-default branches. Try `--all-branches`.
 
 ## Contributing
